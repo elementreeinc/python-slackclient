@@ -47,13 +47,7 @@ class SlackClient(object):
         :Returns:
             False on exceptions
         '''
-
-        try:
-            self.server.rtm_connect(use_rtm_start=with_team_state, **kwargs)
-            return True
-        except Exception:
-            traceback.print_exc()
-            return False
+        self.server.rtm_connect(use_rtm_start=with_team_state, **kwargs)
 
     def api_call(self, method, timeout=None, **kwargs):
         '''
