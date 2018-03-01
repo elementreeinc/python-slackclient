@@ -49,7 +49,17 @@ class SlackClient(object):
         '''
         self.server.rtm_connect(use_rtm_start=with_team_state, **kwargs)
 
-    def api_call(self, method, timeout=None, **kwargs):
+    def api_call(self, method, timeout=None, wait_and_retry_on_ratelimit=True, **kwargs):
+        while True:
+            result = self._api_call(method, timeout, **kwargs)
+            retry_after = result.get("retry_after")
+            if retry_after and wait_and_retry_on_ratelimit:
+                sleep(float(retry_after))
+            else:
+                break
+        return result
+        
+    def _api_call(self, method, timeout=None, **kwargs):
         '''
         Call the Slack Web API as documented here: https://api.slack.com/web
 
