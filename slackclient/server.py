@@ -255,7 +255,17 @@ class Server(object):
 
             See here for more information on responses: https://api.slack.com/web
         '''
-        return self.api_requester.do(self.token, method, kwargs, timeout=timeout).text
+        resp = self.api_requester.do(self.token, method, kwargs, timeout=timeout)
+        retry_after = resp.headers.get("Retry-After")
+        if retry_after:
+            try:
+                resp_json = json.loads(resp.text)
+                resp_json["retry_after"] = retry_after
+                return json.dumps(resp_json)
+            except ValueError as json_decode_error:
+                raise ParseResponseError(response_body, json_decode_error)
+        else:
+            return resp.text
 
 # TODO: Move the error types defined below into the .exceptions namespace. This would be a semver
 # major change because any clients already referencing these types in order to catch them
